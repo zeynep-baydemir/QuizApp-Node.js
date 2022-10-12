@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const omit = require('just-omit');
 
 router.get('/', async (req,res) => {
     try {
-        const users = await User.find();
+        const users = await (await User.find()).map(user =>{
+            const userJSON= user.toJSON();
+            delete userJSON.password;
+            return userJSON;
+        });
         res.json(users);
     }catch(err){
         res.json({message:err});
@@ -14,7 +19,10 @@ router.get('/', async (req,res) => {
 router.get('/:userId', async (req,res) => {
     try {
         const user = await User.findById(req.params.userId);
-        res.json(user);
+        const userJSON= user.toJSON();
+        delete userJSON.password;
+        console.log("test")
+        res.json(userJSON);
     }catch(err){
         res.json({message:err});
     }
