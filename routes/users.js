@@ -53,8 +53,11 @@ router.patch('/:userId', async (req,res)=>{
                     surname: req.body.surname,
                     username: req.body.username,
                     email: req.body.email,
-                    password: req.body.password}});
+                    password: req.body.password}
+            },
+            { runValidators: true });
         res.json(updatedUser);
+        { runValidators: true }
     }catch(err){
         res.json({message:err});
     };
