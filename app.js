@@ -19,7 +19,7 @@ const User = require('./models/User');
 app.use('/users', userRoute);
 app.use('/quizzes', quizRoute);
 
-JWT_SECRET = 'lsanlafblfef#aghjk41.6&sa*flalas/23*66f?aglh';
+const JWT_SECRET = 'lsanl/(afblfef#aghjk41.6&sa*flalas/23*66f?aglh';
 app.post('/register', async (req,res)=> {
     const {username, password: plainTextPassword} =req.body;
     if (!username || typeof username !== 'string') {
@@ -43,7 +43,7 @@ app.post('/register', async (req,res)=> {
             username,
             password
         })
-        console.log("user is created")
+        console.log(response);
     }catch(err){
         if (err.code === 11000) {
 			return res.json({ status: 'error', err: 'Username already in use' });
@@ -55,12 +55,10 @@ app.post('/register', async (req,res)=> {
 
 app.post('/login', async (req,res) => {
     const {username, password} =req.body;
-    const user = await User.findOne({username}).lean;
-
+    const user = await User.findOne({username}).lean();
     if(!user) {
         return res.json({status:'error', error: 'Invalid username'})
     }
-
     if(await bcrypt.compare(password, user.password)){
         const token = jwt.sign({
             id: user._id, 
@@ -68,25 +66,31 @@ app.post('/login', async (req,res) => {
         }, 
         JWT_SECRET
         )
-        return res.json({status:'ok', data: ''})
+        return res.json({status:'ok', data: token})
     }
     res.json({ status: 'error', error: 'Invalid username/password' })
 })
 
 app.post('/change-password', async (req,res) => {
-    const { token, newPassword} = req.body;
+    const { token, newPassword: plainTextPassword} = req.body;
     try{
+        console.log(token);
         const user = jwt.verify(token,JWT_SECRET);
+        console.log("verified");
         const _id = user.id;
-        const password = await bcrypt.hash(newPassword,10);
+        const password = await bcrypt.hash(plainTextPassword,10);
+        console.log(password);
+        console.log("test1");
         await User.updateOne(
             {_id},
             {$set: {password}}
         )
+        console.log("test2");
+
         res.json({status:'ok'});
     }catch(error){
         res.json({status:'error', error:''})
-    }
+    } 
 })
 mongoose.connect(process.env.DB_CONNECTION,{useNewUrlParser:true},()=>{
     console.log('connected to mongodb')

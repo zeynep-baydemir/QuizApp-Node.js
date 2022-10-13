@@ -14,7 +14,7 @@
         </form>
         <script>
             const form = document.getElementById('login')
-            form.addEventListener('submit', login)
+            form.addEventListener('submit', login)  
             async function login(event){
                 event.preventDefault()
                 const username = document.getElementById('username').value
@@ -32,6 +32,8 @@
                 }).then((res) => res.json())
                 console.log(result)
                 if (result.status === 'ok') {
+                    console.log('Got the token: ', result.data)
+					localStorage.setItem('token', result.data)
 					alert('Success')
 				} else {
 					alert(result.error)
