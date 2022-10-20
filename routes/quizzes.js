@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
+const {authenticateUser,authenticateAdmin} = require('../middlewares/authentication');
 const Quiz = require('../models/Quiz');
 
-router.get('/', async (req,res) => {
+router.get('/', authenticateAdmin, async (req,res) => {
     try{
         const quizzes = await Quiz.find();
         res.json(quizzes);
@@ -12,7 +13,7 @@ router.get('/', async (req,res) => {
     }
 });
 
-router.get('/:quizId', async (req,res) => {
+router.get('/:quizId', authenticateUser,async (req,res) => {
     try{
         const quiz = await Quiz.findById(req.params.quizId);
         res.json(quiz);
@@ -21,7 +22,7 @@ router.get('/:quizId', async (req,res) => {
     }
 });
 
-router.post('/', async (req,res) => {
+router.post('/', authenticateAdmin,async (req,res) => {
     const quiz = new Quiz ({
         name: req.body.name,
         question: req.body.question,
@@ -36,7 +37,7 @@ router.post('/', async (req,res) => {
     }
 });
 
-router.patch('/addAnswer/:quizId', async (req,res) => {
+router.patch('/addAnswer/:quizId', authenticateAdmin, async (req,res) => {
     try{
         const updated = await Quiz.updateOne(
             {_id: req.params.quizId},
@@ -48,7 +49,7 @@ router.patch('/addAnswer/:quizId', async (req,res) => {
         };
 })
 
-router.patch('/:quizId', async (req,res) => {
+router.patch('/:quizId', authenticateAdmin,async (req,res) => {
     try{
         const updatedQuiz = await Quiz.updateOne(
             {_id: req.params.quizId},
@@ -64,7 +65,7 @@ router.patch('/:quizId', async (req,res) => {
     
 });
 
-router.delete('/:quizId', async(req,res) => {
+router.delete('/:quizId',authenticateAdmin, async(req,res) => {
     try{
         const deletedQuiz = await Quiz.remove({_id:req.params.quizId});
         res.json(deletedQuiz);
@@ -73,7 +74,7 @@ router.delete('/:quizId', async(req,res) => {
     }
 });
 
-router.delete('/deleteAnswer/:quizId/:answerId',async(req,res) =>{
+router.delete('/deleteAnswer/:quizId/:answerId',authenticateAdmin,async(req,res) =>{
     try {
         const quiz = await Quiz.findById(req.params.quizId);
         await quiz.answers.pull({_id:req.params.answerId});

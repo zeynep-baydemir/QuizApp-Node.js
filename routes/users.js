@@ -1,49 +1,47 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const {authenticateUser,authenticateAdmin} = require('../middlewares/authentication');
 
-router.get('/', async (req,res) => {
-    try {
-        const users = await (await User.find()).map(user =>{
-            const userJSON= user.toJSON();
-            delete userJSON.password;
-            return userJSON;
-        });
+
+router.get('/',authenticateAdmin,async (req,res) => {
+    try{
+        const size = req.query.size;
+        const page = req.query.page;
+        const users=await User.find({},{},{skip:page*size,limit:size}).select('username _id role');
         res.json(users);
     }catch(err){
         res.json({message:err});
     }
 });
 
-router.get('/:userId', async (req,res) => {
+
+router.get('/:userId',authenticateUser, async (req,res) => {
     try {
-        const user = await User.findById(req.params.userId);
-        const userJSON= user.toJSON();
-        delete userJSON.password;
-        console.log("test")
-        res.json(userJSON);
+        const user=await User.findById(req.params.userId).select('username _id');
+        res.json(user);
     }catch(err){
         res.json({message:err});
     }
 });
 
-router.post('/', async (req,res)=> {
+router.post('/',authenticateUser,async (req,res)=> {
     const user = new User({
         name: req.body.name,
         surname: req.body.surname,
         email: req.body.email,
         password: req.body.password,
-        username: req.body.username
+        username: req.body.username,
     });
     try {
         const newUser = await user.save();
         res.json(newUser);
-    }catch{
+    }catch(err){
         res.json({message:err});
     }
 });
 
-router.delete('/:userId', async (req,res) =>{
+router.delete('/:userId',authenticateAdmin, async (req,res) =>{
     try{
         const deletedUser = await User.remove({_id: req.params.userId});
         res.json(deletedUser);
@@ -52,7 +50,7 @@ router.delete('/:userId', async (req,res) =>{
     }
 });
 
-router.patch('/:userId', async (req,res)=>{
+router.patch('/:userId', authenticateUser, async (req,res)=>{
     try{
         const updatedUser = await User.updateOne(
             {_id: req.params.userId},
@@ -64,10 +62,23 @@ router.patch('/:userId', async (req,res)=>{
             },
             { runValidators: true });
         res.json(updatedUser);
-        { runValidators: true }
     }catch(err){
         res.json({message:err});
     };
 });
 
+/*
+router.patch('/role/:userId',async (req,res)=>{
+    try{
+        const updatedUser = await User.updateOne(
+            {_id: req.params.userId},
+            {$set: {role:"admin"}
+            },
+            { runValidators: true });
+        res.json(updatedUser);
+    }catch(err){
+        res.json({message:err});
+    };
+});
+*/
 module.exports = router;
